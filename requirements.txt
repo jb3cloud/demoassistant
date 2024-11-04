@@ -1,0 +1,16 @@
+python-dotenv
+
+livekit
+livekit-agents
+livekit-plugins-openai
+livekit-plugins-azure
+livekit-plugins-deepgram
+livekit-plugins-silero
+
+azure-core
+llama-index-core
+llama-index-embeddings-azure-openai
+llama-index-vector-stores-azureaisearch
+
+llm-sandbox
+sqlalchemy
