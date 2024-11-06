@@ -1,10 +1,8 @@
 import logging
-from typing import Annotated, Any
+from typing import Annotated
 
-from livekit.agents.llm import ChatImage, ChatMessage, FunctionContext, TypeInfo, ai_callable
-from livekit.agents.pipeline import AgentCallContext
+from livekit.agents.llm import FunctionContext, TypeInfo, ai_callable
 
-from common import Common
 from config import Config
 from tools.bing_search import bing_news_search_impl
 from tools.code_runner import run_code

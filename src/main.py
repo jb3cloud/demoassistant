@@ -33,13 +33,14 @@ async def update_chat_context(chat_ctx: ChatContext, frame: Optional[VideoFrame]
     # Add the most recent camera image to the chat context
     if frame:
         logging.debug("Adding camera image to chat context")
-        chat_ctx.messages.insert(-1,
-                                 ChatMessage.create(
-                                     role="user",
-                                     text="Camera image",
-                                     images=[ChatImage(frame)]
-                                 )
-                                 )
+        chat_ctx.messages.insert(
+            -1,
+            ChatMessage.create(
+                role="user",
+                text="Web Camera Snapshot",
+                images=[ChatImage(frame)]
+            )
+        )
 
     # Log the chat context
     for message in chat_ctx.messages:
