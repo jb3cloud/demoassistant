@@ -61,11 +61,11 @@ class VoiceServices:
             api_key="e3dad98357cdf75ca2630fa7f5523ea8fe87e864"
         )
 
-        stt = azure.STT(
-            languages=Config.STT_LANGUAGES,
-            speech_key=Config.AZURE_SPEECH_KEY,
-            speech_region=Config.AZURE_SPEECH_REGION
-        )
+        # stt = azure.STT(
+        #     languages=Config.STT_LANGUAGES,
+        #     speech_key=Config.AZURE_SPEECH_KEY,
+        #     speech_region=Config.AZURE_SPEECH_REGION
+        # )
 
         tts = azure.TTS(
             voice = Config.TTS_VOICE,
