@@ -1,10 +1,11 @@
 import logging
+from typing import Optional
 
 from livekit.agents import AutoSubscribe, JobContext, JobProcess, WorkerOptions, cli
 from livekit.agents.llm import ChatContext, ChatImage, ChatMessage
 from livekit.agents.pipeline import VoicePipelineAgent
+from livekit.rtc import VideoFrame
 
-from common import Common
 from handlers.room_handler import RoomHandler
 from services.agent_tools import AgentTools
 from services.voice_services import VoiceServices
@@ -22,20 +23,25 @@ def initialize(proc: JobProcess) -> None:
     proc.userdata["tools"] = AgentTools()
 
 
-async def update_chat_context(_, chat_ctx: ChatContext):
+async def update_chat_context(chat_ctx: ChatContext, frame: Optional[VideoFrame]) -> None:
+    """Updates the chat context"""
+
+    # Limit the number of messages in the context to 15
     if len(chat_ctx.messages) > 15:
         chat_ctx.messages = chat_ctx.messages[-15:]
 
-    if Common.frame:
+    # Add the most recent camera image to the chat context
+    if frame:
         logging.debug("Adding camera image to chat context")
         chat_ctx.messages.insert(-1,
-             ChatMessage.create(
-                 role="user",
-                 text="Camera image",
-                 images=[ChatImage(Common.frame)]
-             )
-       )
+                                 ChatMessage.create(
+                                     role="user",
+                                     text="Camera image",
+                                     images=[ChatImage(frame)]
+                                 )
+                                 )
 
+    # Log the chat context
     for message in chat_ctx.messages:
         logger.debug(f"chat_ctx: {message}")
 
@@ -50,13 +56,14 @@ async def entrypoint(job_ctx: JobContext) -> None:
     services: VoiceServices = job_ctx.proc.userdata["services"]
     tools: AgentTools = job_ctx.proc.userdata["tools"]
     agent = VoicePipelineAgent(
-        vad = services.vad,
-        stt = services.stt,
-        llm = services.llm,
-        tts = services.tts,
-        fnc_ctx = tools,
-        preemptive_synthesis = True,
-        before_llm_cb = update_chat_context
+        vad=services.vad,
+        stt=services.stt,
+        llm=services.llm,
+        tts=services.tts,
+        fnc_ctx=tools,
+        preemptive_synthesis=True,
+        before_llm_cb=lambda _, chat_ctx:
+        update_chat_context(chat_ctx, room_handler.frame)
     )
 
     # Connect to the LiveKit room

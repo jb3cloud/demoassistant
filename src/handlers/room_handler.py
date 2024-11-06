@@ -1,11 +1,12 @@
 import asyncio
 import logging
 import random
-from common import Common
 from pathlib import Path
+from typing import Optional
 
 from livekit.agents.pipeline import VoicePipelineAgent
-from livekit.rtc import RemoteParticipant, RemoteTrackPublication, Room, Track, TrackKind, VideoBufferType, VideoStream
+from livekit.rtc import RemoteParticipant, RemoteTrackPublication, Room, Track, TrackKind, VideoBufferType, VideoFrame, \
+    VideoStream
 
 from handlers.chat_handler import ChatHandler
 
@@ -19,6 +20,7 @@ class RoomHandler:
         self._participant = participant
         self._agent = agent
         self._chat_handler = ChatHandler(room, participant, agent)
+        self._frame: Optional[VideoFrame] = None
         self.logger = logging.getLogger(f"room_handler_{room.name}")
 
     @property
@@ -40,6 +42,11 @@ class RoomHandler:
     def room(self) -> Room:
         """The LiveKit room."""
         return self._room
+
+    @property
+    def frame(self) -> Optional[VideoFrame]:
+        """The most recent video frame."""
+        return self._frame
 
     def start(self) -> None:
         """Start the room handler."""
@@ -77,7 +84,7 @@ class RoomHandler:
         self.logger.info(f"video track subscribed from {participant.identity} ({width}x{height})")
         video_stream = VideoStream(track, format=VideoBufferType.RGBA)
         async for frame in video_stream:
-            Common.frame = frame.frame
+            self._frame = frame.frame
 
     def get_greeting(self) -> str:
         """Returns a random greeting from a predefined list."""
