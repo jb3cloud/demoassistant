@@ -1,9 +1,11 @@
 import logging
 
 from livekit.agents import AutoSubscribe, JobContext, JobProcess, WorkerOptions, cli
+from livekit.agents.llm import ChatContext, ChatImage, ChatMessage
 from livekit.agents.pipeline import VoicePipelineAgent
 
-from chat_handler import ChatHandler
+from common import Common
+from handlers.room_handler import RoomHandler
 from services.agent_tools import AgentTools
 from services.voice_services import VoiceServices
 
@@ -17,40 +19,57 @@ def initialize(proc: JobProcess) -> None:
     """
     logger.info("initializing shared services")
     proc.userdata["services"] = VoiceServices.with_azure()
+    proc.userdata["tools"] = AgentTools()
+
+
+async def update_chat_context(_, chat_ctx: ChatContext):
+    if len(chat_ctx.messages) > 15:
+        chat_ctx.messages = chat_ctx.messages[-15:]
+
+    if Common.frame:
+        logging.debug("Adding camera image to chat context")
+        chat_ctx.messages.insert(-1,
+             ChatMessage.create(
+                 role="user",
+                 text="Camera image",
+                 images=[ChatImage(Common.frame)]
+             )
+       )
+
+    for message in chat_ctx.messages:
+        logger.debug(f"chat_ctx: {message}")
 
 
 async def entrypoint(job_ctx: JobContext) -> None:
     """
     The entrypoint for the voice assistant job assigned to us.
     """
-    # Connect to the LiveKit room and wait for a participant to join
-    logger.info(f"connecting to room {job_ctx.room.name}")
-    await job_ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
-
-    logger.info("waiting for participant")
-    participant = await job_ctx.wait_for_participant()
+    room = job_ctx.room
 
     # Create the LiveKit voice assistant
-    room = job_ctx.room
     services: VoiceServices = job_ctx.proc.userdata["services"]
-    tools = AgentTools(services)
+    tools: AgentTools = job_ctx.proc.userdata["tools"]
     agent = VoicePipelineAgent(
         vad = services.vad,
         stt = services.stt,
         llm = services.llm,
         tts = services.tts,
-        fnc_ctx=tools,
-        preemptive_synthesis = True
+        fnc_ctx = tools,
+        preemptive_synthesis = True,
+        before_llm_cb = update_chat_context
     )
 
-    # Start the voice assistant
-    logger.info(f"starting room {room.name} assistant for {participant.identity}")
-    agent.start(room, participant)
+    # Connect to the LiveKit room
+    logger.info(f"connecting to room {job_ctx.room.name}")
+    await job_ctx.connect(auto_subscribe=AutoSubscribe.SUBSCRIBE_ALL)
 
-    # Start the chat handler
-    logger.info("starting chat handler")
-    handler = ChatHandler(agent, room, participant)
-    await handler.start()
+    # Wait for the participant to join
+    logger.info("waiting for participant")
+    participant = await job_ctx.wait_for_participant()
+
+    # Start the room handler
+    room_handler = RoomHandler(room, participant, agent)
+    room_handler.start()
 
 
 """Main program"""
