@@ -65,9 +65,10 @@ class AgentTools(FunctionContext):
             ],
             libraries: Annotated[
                 str, TypeInfo(description="Optional comma separated list of libraries to use")
-            ],
+            ] = None,
     ) -> str:
         library_list = libraries.split(",") if libraries else None
+        logger.info(f"Executing {lang} code (libraries: {library_list}): {code}")
         return run_code(lang, code, library_list)
 
     @ai_callable(description="Search the database for a given english query")
