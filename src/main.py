@@ -38,7 +38,7 @@ async def update_chat_context(chat_ctx: ChatContext, frame: Optional[VideoFrame]
             ChatMessage.create(
                 role="user",
                 text="Web Camera Snapshot",
-                images=[ChatImage(frame)]
+                images=[ChatImage(frame, inference_width=512, inference_height=512)]
             )
         )
 
