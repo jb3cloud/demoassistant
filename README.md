@@ -221,6 +221,14 @@ docker run -d demoassistant
 
 This will run the application in production mode inside a Docker container.
 
+## Current Issues
+
+- This code sandbox requires permissions to run a Docker container, which is currently
+  incompatible with execution within another Docker container or when deployed to an
+  Azure container environment. While enabling this functionality within nested or
+  restricted containerized environments is technically feasible, it is beyond the
+  scope of the current demonstration implementation.
+
 ## Troubleshooting
 
 - **Environment Variables**: Ensure all required keys are set in your `.env` file. Missing credentials will prevent the
