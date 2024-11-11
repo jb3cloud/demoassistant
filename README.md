@@ -15,6 +15,8 @@ Key Features:
 - **Agent Tools:** Samples for realtime weather lookup, bing news search, RAG using Azure Search, dynamic code execution
   using a Docker sandbox and text to SQL using a SQLITE database.
 
+![Voice Assistant Demo Features.png](doc/Voice%20Assistant%20Demo%20Features.png)
+
 ## Setup Instructions
 
 ### Prerequisites
